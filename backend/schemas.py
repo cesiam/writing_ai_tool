@@ -1,13 +1,15 @@
-import pydantic as py
+from pydantic import BaseModel
 from uuid import UUID
+from datetime import datetime
 
-class SessionCreate(py.BaseModel):
+class SessionCreate(BaseModel):
     student_name: str
     essay_prompt: str
 
-class SessionOut(py.BaseModel):
+class SessionOut(BaseModel):
     id: UUID
     student_name: str
     essay_prompt: str
+    student_essay: str
     created_at: datetime
     updated_at: datetime

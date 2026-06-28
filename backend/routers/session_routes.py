@@ -1,18 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session as DBSession
 from database import get_db
 from models import Session as SessionModel
 from schemas import SessionCreate, SessionOut
 from markitdown import MarkItDown
-from openai import OpenAI
+import shutil, tempfile, os
+import uuid
+from datetime import datetime
 
-md = MarkItDown(
-    enable_plugins=True,
-    llm_client=OpenAI(),
-    llm_model="gpt-4o",
+md_converter = MarkItDown(
+    enable_plugins=False
 )
-# result = md.convert("document_with_images.pdf")
-# print(result.text_content)
+
 
 router = APIRouter(prefix="/session", tags=["sessions"])
 
@@ -36,11 +35,23 @@ def get_session(id: str, db: DBSession = Depends(get_db)):
     return session
 
 @router.put("/{id}/essay", response_model=SessionOut)
-def upload_essay(id: str, essay: str, db: DBSession = Depends(get_db)):
+def upload_essay(id: uuid.UUID, file: UploadFile, db: DBSession = Depends(get_db)):
     session = db.query(SessionModel).filter(SessionModel.id == id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    session.essay = essay
+
+    suffix = os.path.splitext(file.filename)[1]
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+
+    try:
+        result = md_converter.convert(tmp_path)
+        text = result.text_content
+    finally:
+        os.remove(tmp_path)
+    session.student_essay = text
+    session.updated_at = datetime.now()
     db.commit()
     db.refresh(session)
     return session
