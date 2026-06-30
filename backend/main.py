@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_db, engine, Base
-from routers import session_routes, ai_routes
+from routers import session_routes, ai_routes,assignment_routes
 
 Base.metadata.create_all(bind=engine) 
 
@@ -16,4 +16,5 @@ app.add_middleware(
 )
 
 app.include_router(session_routes.router)
-# app.include_router(ai_routes.router)
+app.include_router(ai_routes.router)
+app.include_router(assignment_routes.router)

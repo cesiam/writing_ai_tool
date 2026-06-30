@@ -20,6 +20,7 @@ def create_session(data: SessionCreate, db: DBSession = Depends(get_db)):
     new_session = SessionModel(
         student_name=data.student_name,
         essay_prompt=data.essay_prompt,
+        assignment_id=data.assignment_id,   
     )
     db.add(new_session)
     db.commit()
