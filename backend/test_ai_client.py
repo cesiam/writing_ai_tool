@@ -48,5 +48,4 @@ def test_generate_feedback():
     first = annotations[0]
     assert "quote" in first
     assert "comment_type" in first
-    assert "comment" in first
     assert first["comment_type"] in ("content", "genre", "rhetorical", "audience")

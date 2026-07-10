@@ -16,7 +16,7 @@ import logging
 load_dotenv()
 base_url = "https://parley.api.mit.edu/v1"
 parley_api_key = os.getenv("PARLEY_API_KEY")
-model = "openai/gpt-5"
+model = "openai/gpt-5.4 mini"
 
 client = OpenAI(
     api_key=parley_api_key,

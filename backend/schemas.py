@@ -18,6 +18,8 @@ class SessionOut(BaseModel):
     updated_at: datetime
 
 class AnnotationSpan(BaseModel):
+    """Shape the LLM returns during generation. Becomes one StudentAnnotation
+    row plus one initial AnnotationMessage(role="ai") row when persisted."""
     span_start: int
     span_end: int
     quote: str
@@ -26,7 +28,18 @@ class AnnotationSpan(BaseModel):
     question: str | None = None
     rationale: str | None = None
 
+
+class AnnotationMessageOut(BaseModel):
+    """One turn in the Socratic thread, read back from the DB."""
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    role: Literal["ai", "student"]
+    content: str
+    created_at: datetime
+
+
 class AnnotationOut(BaseModel):
+    """A span read back from the DB, with its full message thread nested."""
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     session_id: UUID
@@ -34,9 +47,8 @@ class AnnotationOut(BaseModel):
     span_end: int
     quote: str
     comment_type: Literal["content", "genre", "rhetorical", "audience"]
-    comment: str
-    question: str | None = None
-    rationale: str | None = None
+    created_at: datetime
+    messages: list[AnnotationMessageOut] = []
 
 class FeedbackOutput(BaseModel):
     annotations: list[AnnotationSpan]

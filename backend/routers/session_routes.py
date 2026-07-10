@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session as DBSession
 from database import get_db
 from models import Session as SessionModel
-from schemas import SessionCreate, SessionOut
+from schemas import SessionCreate, SessionOut, AnnotationOut
 from markitdown import MarkItDown
 import shutil, tempfile, os
 import uuid
@@ -62,4 +62,11 @@ def upload_essay(id: uuid.UUID, file: UploadFile, db: DBSession = Depends(get_db
 def list_sessions(db: DBSession = Depends(get_db)):
     return db.query(SessionModel).all()
 
+
+@router.get("/sessions/{id}/annotations", response_model=list[AnnotationOut])
+def get_session_annotations(id: uuid.UUID, db: DBSession = Depends(get_db)):
+    session = db.query(Session).filter(Session.id == id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session.annotations
 

@@ -36,13 +36,12 @@ class ExemplarAnnotation(Base):
     __tablename__ = "exemplar_annotations"
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     assignment_id = Column(Uuid, ForeignKey("assignments.id"), nullable=False)
-    span_start = Column(String, nullable=False)   # the string denotes an int
-    span_end = Column(String, nullable=False) # the string denotes an int
+    span_start = Column(String, nullable=False)
+    span_end = Column(String, nullable=False)
     quote = Column(Text, nullable=False)
     comment_type = Column(String)   # content | genre | rhetorical | audience
     comment = Column(Text, nullable=False)
     parent_id = Column(Uuid, ForeignKey("exemplar_annotations.id"), nullable=True)
-    status = Column(String, default="suggested")  # suggested | accepted | edited | rejected
     created_at = Column(DateTime, default=datetime.now)
 
     assignment = relationship("Assignment", back_populates="exemplar_annotations")
@@ -55,22 +54,23 @@ class StudentAnnotation(Base):
     span_start = Column(String, nullable=False)
     span_end = Column(String, nullable=False)
     quote = Column(Text, nullable=False)
-    comment_type = Column(String)
-    comment = Column(Text, nullable=False)
-    question = Column(Text)
-    rationale = Column(Text)   
+    comment_type = Column(String)        
     created_at = Column(DateTime, default=datetime.now)
 
     session = relationship("Session", back_populates="annotations")
-    messages = relationship("AnnotationMessage", back_populates="annotation")
+    messages = relationship(
+        "AnnotationMessage",
+        back_populates="annotation",
+        order_by="AnnotationMessage.created_at",
+    )
 
 
 class AnnotationMessage(Base):
     __tablename__ = "annotation_messages"
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     annotation_id = Column(Uuid, ForeignKey("student_annotations.id"), nullable=False)
-    role = Column(String, nullable=False)   
-    content = Column(Text, nullable=False)
+    role = Column(String, nullable=False)     
+    content = Column(Text, nullable=False)      
     created_at = Column(DateTime, default=datetime.now)
 
     annotation = relationship("StudentAnnotation", back_populates="messages")

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from schemas import FeedbackOutput, AnnotationSpan
 from services.ai_client import call_model
 from models import Session as SessionModel
-from models import StudentAnnotation
+from models import StudentAnnotation, AnnotationMessage
 from sqlalchemy.orm import Session as DBSession
 
 FEEDBACK_SYSTEM_PROMPT = """
@@ -43,24 +43,29 @@ def generate_feedback(session_id: uuid.UUID, db: DBSession) -> list[StudentAnnot
         {"role": "user", "content": f"Rubric:\n{assignment.rubric_text}\n\nEssay:\n{session.student_essay}"}
     ]
 
-    result = call_model(messages, FeedbackOutput)  
-
+    result = call_model(messages, FeedbackOutput) 
     annotations = []
-    for ann in result.annotations:
-        start = session.student_essay.find(ann.quote) 
-        if start == -1:
-            continue  
-        end = start + len(ann.quote)
-        annotations.append(StudentAnnotation(
-            session_id=session_id,
-            span_start=start,
-            span_end=end,
-            quote=ann.quote,
-            comment_type=ann.comment_type,
-            comment=ann.comment,
-            question=ann.question,
-        ))
 
-    db.add_all(annotations)
+    for span in result.annotations:  
+        annotation = StudentAnnotation(
+            session_id=session_id,
+            span_start=span.span_start,
+            span_end=span.span_end,
+            quote=span.quote,
+            comment_type=span.comment_type,
+        )
+        db.add(annotation)
+        db.flush()  
+
+        message_content = span.comment
+        if span.question:
+            message_content += f" {span.question}"
+
+        db.add(AnnotationMessage(
+            annotation_id=annotation.id,
+            role="ai",
+            content=message_content,
+        ))
+        annotations.append(annotation)
     db.commit()
     return annotations
