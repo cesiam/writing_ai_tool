@@ -55,8 +55,9 @@ class FeedbackOutput(BaseModel):
 
 class PrewritingReply(BaseModel):
     reply: str
-    phase: Literal["orient", "explore", "rubric_check", "wrap"]
-    ready_to_wrap: bool
+    phase: Literal["thesis", "claims_evidence", "rubric_alignment", "wrap"]
+    ready_to_advance: bool
+    criteria_touched: list[UUID] = []
 
 class AssignmentCreate(BaseModel):
     name: str
@@ -70,3 +71,14 @@ class AssignmentOut(BaseModel):
     prompt: str | None
     rubric_text: str | None
     created_at: datetime
+
+class SessionMessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    role: Literal["ai", "student"]
+    content: str
+    phase: Literal["thesis", "claims_evidence", "rubric_alignment", "wrap"]
+    created_at: datetime
+
+class PrewritingMessageIn(BaseModel):
+    content: str

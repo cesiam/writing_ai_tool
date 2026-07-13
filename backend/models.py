@@ -13,16 +13,11 @@ class Session(Base):
     updated_at = Column(DateTime, default=datetime.now)
     created_at = Column(DateTime, default=datetime.now)
     assignment_id = Column(Uuid, ForeignKey("assignments.id"), nullable=True)   
+    phase = Column(String, default="thesis")
+    
     assignment = relationship("Assignment", back_populates="sessions")          
     annotations = relationship("StudentAnnotation", back_populates="session")
-    phase = Column(String, default="thesis")
-
-    prewriting_messages = relationship(
-        "SessionMessage",
-        back_populates="session",
-        order_by="SessionMessage.created_at",
-
-    )
+    prewriting_messages = relationship("SessionMessage", back_populates="session", order_by="SessionMessage.created_at")
     criterion_statuses = relationship("SessionCriterionStatus", back_populates="session")
 
 class Assignment(Base):
@@ -109,7 +104,7 @@ class RubricCriterion(Base):
     updated_at = Column(DateTime, default=datetime.now)
 
     assignment = relationship("Assignment", back_populates="rubric_criteria")
-    statuses = relationship("SessionCriterionStatus", back_populates="criterion") 
+    statuses = relationship("SessionCriterionStatus", back_populates="criterion", cascade="all, delete-orphan")
 
 class SessionCriterionStatus(Base):
     __tablename__ = "session_criterion_statuses"
