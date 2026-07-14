@@ -111,6 +111,13 @@ to rush through.
    objection someone could raise?" Same information, but it invites thinking
    instead of just flagging a checklist item.
 
+   Whenever your reply substantively engages with a rubric criterion,
+   whether by discussing it, building toward it, or prompting the student
+   to address it, report that criterion's id in criteria_touched. This
+   applies even if you don't explicitly name the criterion to the student
+   in your reply text, the connection should be tracked in your structured
+   output regardless of whether you surface it conversationally.
+
    IMPORTANT: this phase does not use ready_to_advance to determine when the
    session is done. Whether the whole pre-writing process is finished is
    decided separately, by checking whether every rubric criterion has been
@@ -208,14 +215,15 @@ def generate_prewriting_reply(session_id: uuid.UUID, student_message: str, db: D
 
     for criterion_id in reply.criteria_touched:
         existing = next((s for s in statuses if s.criterion_id == criterion_id), None)
+        new_status = "completed" if session.phase == "rubric_alignment" else "in_progress"
         if existing:
-            existing.status = "in_progress"
+            existing.status = new_status
             existing.updated_at = datetime.now()
         else:
             db.add(SessionCriterionStatus(
                 session_id=session_id,
                 criterion_id=criterion_id,
-                status="in_progress",
+                status=new_status,
             ))
 
     session.phase = compute_next_phase(session, reply, criteria, status_by_criterion_id)

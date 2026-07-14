@@ -18,3 +18,7 @@ def create_assignment(data: AssignmentCreate, db: DBSession = Depends(get_db)):
     db.commit()
     db.refresh(assignment)
     return assignment
+
+@router.get("/assignments", response_model=list[AssignmentOut])
+def list_assignments(db: DBSession = Depends(get_db)):
+    return db.query(Assignment).all()

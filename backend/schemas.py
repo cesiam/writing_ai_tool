@@ -82,3 +82,9 @@ class SessionMessageOut(BaseModel):
 
 class PrewritingMessageIn(BaseModel):
     content: str
+
+class AnnotationMessageIn(BaseModel):
+    content: str
+
+class AnnotationReply(BaseModel):
+    content: str
