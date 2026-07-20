@@ -18,8 +18,7 @@ class SessionOut(BaseModel):
     updated_at: datetime
 
 class AnnotationSpan(BaseModel):
-    """Shape the LLM returns during generation. Becomes one StudentAnnotation
-    row plus one initial AnnotationMessage(role="ai") row when persisted."""
+
     span_start: int
     span_end: int
     quote: str
@@ -30,7 +29,6 @@ class AnnotationSpan(BaseModel):
 
 
 class AnnotationMessageOut(BaseModel):
-    """One turn in the Socratic thread, read back from the DB."""
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     role: Literal["ai", "student"]
@@ -39,7 +37,6 @@ class AnnotationMessageOut(BaseModel):
 
 
 class AnnotationOut(BaseModel):
-    """A span read back from the DB, with its full message thread nested."""
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     session_id: UUID
@@ -49,6 +46,7 @@ class AnnotationOut(BaseModel):
     comment_type: Literal["content", "genre", "rhetorical", "audience"]
     created_at: datetime
     messages: list[AnnotationMessageOut] = []
+    exemplar_text: str | None = None
 
 class FeedbackOutput(BaseModel):
     annotations: list[AnnotationSpan]
@@ -70,8 +68,9 @@ class AssignmentOut(BaseModel):
     name: str
     prompt: str | None
     rubric_text: str | None
+    exemplar_text: str | None = None
     created_at: datetime
-
+    
 class SessionMessageOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
@@ -88,3 +87,21 @@ class AnnotationMessageIn(BaseModel):
 
 class AnnotationReply(BaseModel):
     content: str
+
+class ExemplarAnnotationCreate(BaseModel):
+    span_start: int
+    span_end: int
+    quote: str
+    comment_type: Literal["content", "genre", "rhetorical", "audience"]
+    comment: str
+
+class ExemplarAnnotationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    assignment_id: UUID
+    span_start: int
+    span_end: int
+    quote: str
+    comment_type: Literal["content", "genre", "rhetorical", "audience"]
+    comment: str
+    created_at: datetime

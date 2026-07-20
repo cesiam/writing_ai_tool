@@ -1,4 +1,3 @@
-# cleanup_duplicate_criteria.py
 from database import SessionLocal
 from models import RubricCriterion
 import uuid

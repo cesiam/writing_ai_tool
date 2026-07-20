@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Writing Coach</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: rgb(80,108,100);
+    --bg-deep: rgb(62,86,79);
+    --accent: rgb(243,255,185);
+    --glass: rgba(255,255,255,0.09);
+    --glass-strong: rgba(255,255,255,0.15);
+    --glass-border: rgba(243,255,185,0.22);
+    --ink: rgb(240,242,232);
+    --ink-muted: rgba(240,242,232,0.6);
+  }
+  body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+  .serif { font-family: 'Poppins', sans-serif; letter-spacing: 0.01em; }
+
+  .app-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .nav-pill {
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--glass-border);
+    color: var(--ink-muted);
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    text-align: left;
+    letter-spacing: 0.02em;
+    transition: all 0.18s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .nav-pill:hover { color: var(--ink); border-color: rgba(243,255,185,0.4); }
+  .nav-pill.active {
+    background: rgba(243,255,185,0.10);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 24px rgba(243,255,185,0.12);
+  }
+
+  .content-card {
+    background: var(--glass);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 36px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.30);
+    min-height: 68vh;
+  }
+
+  .glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+  }
+  .glass-input {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--glass-border);
+    color: var(--ink);
+    border-radius: 10px;
+  }
+  .glass-input::placeholder { color: var(--ink-muted); }
+  .glass-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(243,255,185,0.12); }
+
+  .btn-glass {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    color: var(--ink);
+    border-radius: 10px;
+    transition: all 0.15s ease;
+  }
+  .btn-glass:hover { border-color: var(--accent); background: rgba(255,255,255,0.13); }
+  .btn-glass:disabled { opacity: 0.5; cursor: default; }
+
+  .link-muted { color: var(--ink-muted); text-decoration: underline; }
+  .link-muted:hover { color: var(--accent); }
+
+  .msg-ai { background: rgba(255,255,255,0.06); border-left: 3px solid var(--accent); }
+  .msg-student { background: rgba(255,255,255,0.12); border-left: 3px solid rgba(240,242,232,0.5); }
+
+  .phase-dot { transition: all 0.2s ease; }
+  .phase-dot.active { background: var(--accent); color: rgb(40,54,50); }
+  .phase-dot.inactive { background: rgba(255,255,255,0.08); color: var(--ink-muted); }
+
+  .essay-highlight { border-radius: 3px; padding: 0 2px; cursor: pointer; transition: filter 0.15s ease; }
+  .essay-highlight:hover { filter: brightness(1.15); }
+  .essay-highlight.content { background: rgba(243,255,185,0.35); }
+  .essay-highlight.genre { background: rgba(180,220,200,0.35); }
+  .essay-highlight.rhetorical { background: rgba(200,190,240,0.35); }
+  .essay-highlight.audience { background: rgba(240,190,200,0.35); }
+
+  .assignment-card { transition: all 0.15s ease; }
+  .assignment-card.selected { border-color: var(--accent); }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+</style>
+</head>
+<body class="p-6 md:p-12">
+
+<div class="app-shell flex flex-col md:flex-row gap-6 items-start">
+
+  <nav class="side-nav md:sticky md:top-12 flex-row md:flex-col w-full md:w-48 flex gap-2 md:gap-2.5">
+    <button data-tab="instructor" class="nav-pill active">Instructor</button>
+    <button data-tab="prewriting" class="nav-pill">Pre-writing</button>
+    <button data-tab="reflection" class="nav-pill">Post-writing</button>
+  </nav>
+
+  <div class="content-card flex-1 w-full">
+
+    <header class="mb-6 flex items-baseline justify-between border-b border-white/10 pb-4">
+      <div>
+        <h1 class="serif text-2xl font-semibold" style="color: var(--ink)">Writing Coach</h1>
+        <p class="text-sm mt-1" style="color: var(--ink-muted)">A thinking partner for your essay, before and after you write.</p>
+      </div>
+      <div id="activeSessionBar" class="text-xs hidden text-right" style="color: var(--ink-muted)">
+        Session <span id="activeSessionId" class="font-mono"></span><br>
+        <button id="newSessionBtn" class="link-muted">start over</button>
+      </div>
+    </header>
+
+    <!-- ================= INSTRUCTOR TAB ================= -->
+    <section id="tab-instructor" class="tab-panel">
+
+      <div id="instructorAssignmentList" class="space-y-2 mb-4"></div>
+      <p id="assignmentListEmpty" class="text-sm italic hidden" style="color: var(--ink-muted)"></p>
+
+      <button id="newAssignmentToggle" class="btn-glass px-4 py-2 text-sm mb-4">+ New assignment</button>
+
+      <div id="newAssignmentForm" class="glass-card p-4 mb-6 text-sm space-y-3 hidden">
+        <div>
+          <label class="block mb-1" style="color: var(--ink-muted)">Assignment name</label>
+          <input id="newAssignmentName" type="text" placeholder="e.g. WWI Essay"
+            class="w-full glass-input px-3 py-2" />
+        </div>
+        <div>
+          <label class="block mb-1" style="color: var(--ink-muted)">Prompt</label>
+          <textarea id="newAssignmentPrompt" rows="2" placeholder="What should students write about?"
+            class="w-full glass-input px-3 py-2 resize-none"></textarea>
+        </div>
+        <p class="text-xs" style="color: var(--ink-muted)">Rubric and exemplar essay are uploaded after creating the assignment.</p>
+        <button id="createAssignmentBtn" class="btn-glass px-4 py-2">Create assignment</button>
+        <p id="assignmentCreateStatus" class="text-xs text-red-300"></p>
+      </div>
+
+      <!-- Assignment editor: rubric, exemplar upload, exemplar annotation -->
+      <div id="assignmentEditor" class="hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="serif text-lg">Editing: <span id="editingAssignmentName" style="color: var(--accent)"></span></h2>
+          <button id="closeEditorBtn" class="link-muted text-xs">back to assignments</button>
+        </div>
+
+        <div class="glass-card p-4 mb-4 text-sm">
+          <h3 class="serif text-base mb-2">Rubric</h3>
+          <p id="rubricStatus" class="text-xs mb-2" style="color: var(--ink-muted)">No rubric uploaded yet.</p>
+          <div class="flex items-center gap-2">
+            <input id="rubricFileInput" type="file" accept=".docx,.doc,.txt,.md,.pdf,.png,.jpg,.jpeg"
+              class="text-xs flex-1 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-white/15 file:text-[var(--ink)] file:text-xs" />
+            <button id="uploadRubricBtn" class="btn-glass px-3 py-2 text-xs">Upload</button>
+          </div>
+        </div>
+
+        <div class="glass-card p-4 mb-4 text-sm">
+          <h3 class="serif text-base mb-2">Exemplar essay</h3>
+          <p id="exemplarUploadStatus" class="text-xs mb-2" style="color: var(--ink-muted)">No exemplar uploaded yet.</p>
+          <div class="flex items-center gap-2">
+            <input id="exemplarFileInput" type="file" accept=".docx,.doc,.txt,.md,.pdf"
+              class="text-xs flex-1 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-white/15 file:text-[var(--ink)] file:text-xs" />
+            <button id="uploadExemplarBtn" class="btn-glass px-3 py-2 text-xs">Upload</button>
+          </div>
+        </div>
+
+        <div id="exemplarViewPanel" class="glass-card p-5 mb-4 relative hidden">
+          <h3 class="serif text-base mb-3">Annotate the exemplar</h3>
+          <p class="text-xs mb-3" style="color: var(--ink-muted)">Drag to select a sentence, then leave a comment.</p>
+          <div id="exemplarTextContainer" class="text-sm leading-7 whitespace-pre-wrap select-text"></div>
+
+          <div id="exemplarCommentPopup" class="hidden absolute z-10 glass-card p-3 w-72 text-sm" style="background: rgba(60,80,74,0.85); backdrop-filter: blur(20px);">
+            <p class="text-xs mb-2" style="color: var(--ink-muted)">Selected: <span id="exemplarSelectedQuote" class="italic"></span></p>
+            <label class="block text-xs mb-1" style="color: var(--ink-muted)">Lens</label>
+            <select id="exemplarCommentType" class="w-full glass-input px-2 py-1.5 mb-2 text-sm">
+              <option value="content">Content</option>
+              <option value="genre">Genre</option>
+              <option value="rhetorical">Rhetorical</option>
+              <option value="audience">Audience</option>
+            </select>
+            <label class="block text-xs mb-1" style="color: var(--ink-muted)">Comment</label>
+            <textarea id="exemplarCommentText" rows="3" placeholder="Why does this work well?"
+              class="w-full glass-input px-2 py-1.5 text-sm resize-none mb-2"></textarea>
+            <div class="flex gap-2">
+              <button id="saveExemplarAnnotation" class="btn-glass px-3 py-1.5 text-xs">Save</button>
+              <button id="cancelExemplarAnnotation" class="btn-glass px-3 py-1.5 text-xs">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="exemplarAnnotationsList" class="space-y-3"></div>
+      </div>
+
+    </section>
+
+    <!-- ================= PRE-WRITING TAB ================= -->
+    <section id="tab-prewriting" class="tab-panel hidden">
+
+      <div id="prewritingStartForm" class="glass-card p-4 text-sm space-y-3">
+        <div>
+          <label class="block mb-1" style="color: var(--ink-muted)">Assignment</label>
+          <select id="prewritingAssignmentSelect" class="w-full glass-input px-3 py-2"></select>
+        </div>
+        <div>
+          <label class="block mb-1" style="color: var(--ink-muted)">Your name</label>
+          <input id="studentName" type="text" placeholder="e.g. Jordan" class="w-full glass-input px-3 py-2" />
+        </div>
+        <button id="startSession" class="btn-glass px-4 py-2">Start</button>
+        <p id="sessionStatus" class="text-xs text-red-300"></p>
+      </div>
+
+      <div id="prewritingActive" class="hidden">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xs uppercase tracking-wide" style="color: var(--ink-muted)">Phase</span>
+          <div id="phaseTracker" class="flex gap-1.5">
+            <span data-phase="thesis" class="phase-dot inactive text-xs px-2.5 py-1 rounded-full">Thesis</span>
+            <span data-phase="claims_evidence" class="phase-dot inactive text-xs px-2.5 py-1 rounded-full">Claims &amp; Evidence</span>
+            <span data-phase="rubric_alignment" class="phase-dot inactive text-xs px-2.5 py-1 rounded-full">Rubric Check</span>
+            <span data-phase="wrap" class="phase-dot inactive text-xs px-2.5 py-1 rounded-full">Wrap</span>
+          </div>
+        </div>
+
+        <div id="prewritingThread" class="space-y-3 mb-4 min-h-[240px] max-h-[50vh] overflow-y-auto pr-1"></div>
+
+        <div class="flex gap-2">
+          <textarea id="prewritingInput" rows="2" placeholder="Type your thinking here..."
+            class="flex-1 glass-input px-3 py-2 text-sm resize-none"></textarea>
+          <button id="sendPrewriting" class="btn-glass px-4 py-2 text-sm self-end">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= REFLECTION TAB ================= -->
+    <section id="tab-reflection" class="tab-panel hidden">
+
+      <div id="reflectionNoSession" class="glass-card p-4 text-sm space-y-3">
+        <p style="color: var(--ink-muted)">No active session yet. Start one here, or on the Pre-writing tab, either works.</p>
+        <div>
+          <label class="block mb-1" style="color: var(--ink-muted)">Assignment</label>
+          <select id="reflectionAssignmentSelect" class="w-full glass-input px-3 py-2"></select>
+        </div>
+        <div>
+          <label class="block mb-1" style="color: var(--ink-muted)">Your name</label>
+          <input id="reflectionStudentName" type="text" placeholder="e.g. Jordan" class="w-full glass-input px-3 py-2" />
+        </div>
+        <button id="reflectionStartSession" class="btn-glass px-4 py-2">Start</button>
+        <p id="reflectionSessionStatus" class="text-xs"></p>
+      </div>
+
+      <div id="reflectionActive" class="hidden">
+        <div class="glass-card p-4 mb-4 text-sm">
+          <h3 class="serif text-base mb-2">Your essay</h3>
+          <p id="essayStatus" class="text-xs mb-3" style="color: var(--ink-muted)">No essay uploaded yet.</p>
+          <div class="flex items-center gap-2">
+            <input id="essayFileInput" type="file" accept=".docx,.doc,.txt,.md,.pdf"
+              class="text-xs flex-1 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-white/15 file:text-[var(--ink)] file:text-xs" />
+            <button id="uploadEssayBtn" class="btn-glass px-3 py-2 text-xs">Upload</button>
+          </div>
+          <button id="generateFeedbackBtn" class="mt-3 btn-glass px-4 py-2 text-sm hidden" style="border-color: var(--accent); color: var(--accent);">
+            Get feedback on this essay
+          </button>
+          <p id="feedbackStatus" class="text-xs mt-2" style="color: var(--ink-muted)"></p>
+        </div>
+
+        <div id="essayViewPanel" class="glass-card p-5 mb-4 hidden">
+          <h3 class="serif text-base mb-3">Your essay, with feedback highlighted</h3>
+          <div id="essayHighlighted" class="text-sm leading-7 whitespace-pre-wrap"></div>
+        </div>
+
+        <div id="annotationsList" class="space-y-4"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+
+<script>
+const API_BASE = "http://127.0.0.1:8000"; // your FastAPI server's address
+
+let currentSessionId = null;
+let assignments = [];
+let editingAssignment = null;
+let currentEssayText = '';
+let currentExemplarText = '';
+let pendingSelection = null;
+
+function setStatus(elId, message, kind) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = message;
+  if (kind === 'success') {
+    el.style.color = 'var(--accent)';
+    el.style.fontWeight = '600';
+  } else if (kind === 'error') {
+    el.style.color = 'rgb(255,150,150)';
+    el.style.fontWeight = '600';
+  } else {
+    el.style.color = 'var(--ink-muted)';
+    el.style.fontWeight = 'normal';
+  }
+}
+
+// tab switching
+
+document.querySelectorAll('.nav-pill').forEach(btn => {
+  btn.addEventListener('click', () => switchMainTab(btn.dataset.tab));
+});
+
+function switchMainTab(name) {
+  document.querySelectorAll('.nav-pill').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('hidden', p.id !== `tab-${name}`));
+  if (name === 'reflection' && currentSessionId) loadAnnotations();
+}
+
+// assignment list + create form
+
+async function loadAssignments() {
+  try {
+    const res = await fetch(`${API_BASE}/assignments`);
+    if (!res.ok) throw new Error(await res.text());
+    assignments = await res.json();
+    renderInstructorList();
+    renderPrewritingAssignmentSelect();
+  } catch (err) {
+    document.getElementById('assignmentListEmpty').classList.remove('hidden');
+    document.getElementById('assignmentListEmpty').textContent = `Could not load assignments (${err.message}).`;
+  }
+}
+
+function renderInstructorList() {
+  const container = document.getElementById('instructorAssignmentList');
+  const emptyMsg = document.getElementById('assignmentListEmpty');
+  container.innerHTML = '';
+  if (assignments.length === 0) {
+    emptyMsg.classList.remove('hidden');
+    emptyMsg.textContent = 'No assignments yet. Create one below.';
+    return;
+  }
+  emptyMsg.classList.add('hidden');
+  for (const a of assignments) {
+    const card = document.createElement('button');
+    card.className = 'assignment-card glass-card w-full text-left p-3';
+    card.innerHTML = `
+      <div class="font-medium text-sm">${escapeHtml(a.name)}</div>
+      <div class="text-xs mt-0.5" style="color: var(--ink-muted)">${escapeHtml(a.prompt || '')}</div>
+    `;
+    card.addEventListener('click', () => openAssignmentEditor(a));
+    container.appendChild(card);
+  }
+}
+
+document.getElementById('newAssignmentToggle').addEventListener('click', () => {
+  document.getElementById('newAssignmentForm').classList.toggle('hidden');
+});
+
+document.getElementById('createAssignmentBtn').addEventListener('click', async () => {
+  const name = document.getElementById('newAssignmentName').value.trim();
+  const prompt = document.getElementById('newAssignmentPrompt').value.trim();
+  const statusEl = document.getElementById('assignmentCreateStatus');
+  if (!name) { statusEl.textContent = 'Assignment name is required.'; return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/assignments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, prompt }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const created = await res.json();
+    statusEl.textContent = '';
+    document.getElementById('newAssignmentForm').classList.add('hidden');
+    document.getElementById('newAssignmentName').value = '';
+    document.getElementById('newAssignmentPrompt').value = '';
+    assignments.push(created);
+    renderInstructorList();
+    renderPrewritingAssignmentSelect();
+    openAssignmentEditor(created);
+  } catch (err) {
+    statusEl.textContent = `Could not create assignment: ${err.message}`;
+  }
+});
+
+function openAssignmentEditor(a) {
+  editingAssignment = a;
+  document.getElementById('assignmentEditor').classList.remove('hidden');
+  document.getElementById('editingAssignmentName').textContent = a.name;
+  document.getElementById('rubricStatus').textContent = a.rubric_text
+    ? `Rubric uploaded (${a.rubric_text.length} characters).`
+    : 'No rubric uploaded yet.';
+  currentExemplarText = a.exemplar_text || '';
+  document.getElementById('exemplarUploadStatus').textContent = currentExemplarText
+    ? `Uploaded (${currentExemplarText.length} characters).`
+    : 'No exemplar uploaded yet.';
+  loadExemplarAnnotations();
+  document.getElementById('instructorAssignmentList').classList.add('hidden');
+  document.getElementById('newAssignmentToggle').classList.add('hidden');
+  document.getElementById('newAssignmentForm').classList.add('hidden');
+}
+
+document.getElementById('closeEditorBtn').addEventListener('click', () => {
+  editingAssignment = null;
+  document.getElementById('assignmentEditor').classList.add('hidden');
+  document.getElementById('instructorAssignmentList').classList.remove('hidden');
+  document.getElementById('newAssignmentToggle').classList.remove('hidden');
+  loadAssignments();
+});
+
+document.getElementById('uploadRubricBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('rubricFileInput');
+  if (!editingAssignment) { setStatus('rubricStatus', 'No assignment selected, this should not happen.', 'error'); return; }
+  if (!fileInput.files.length) { setStatus('rubricStatus', 'Choose a file first.', 'error'); return; }
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  setStatus('rubricStatus', 'Uploading...', 'muted');
+  try {
+    const res = await fetch(`${API_BASE}/assignments/${editingAssignment.id}/rubric`, { method: 'PUT', body: formData });
+    if (!res.ok) throw new Error(await res.text());
+    const updated = await res.json();
+    editingAssignment.rubric_text = updated.rubric_text;
+    setStatus('rubricStatus', `✓ Rubric uploaded (${updated.rubric_text ? updated.rubric_text.length : 0} characters).`, 'success');
+  } catch (err) {
+    setStatus('rubricStatus', `Upload failed: ${err.message}`, 'error');
+  }
+});
+
+document.getElementById('uploadExemplarBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('exemplarFileInput');
+  if (!editingAssignment) { setStatus('exemplarUploadStatus', 'No assignment selected, this should not happen.', 'error'); return; }
+  if (!fileInput.files.length) { setStatus('exemplarUploadStatus', 'Choose a file first.', 'error'); return; }
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  setStatus('exemplarUploadStatus', 'Uploading...', 'muted');
+  try {
+    const res = await fetch(`${API_BASE}/assignments/${editingAssignment.id}/exemplar`, { method: 'PUT', body: formData });
+    if (!res.ok) throw new Error(await res.text());
+    const updated = await res.json();
+    currentExemplarText = updated.exemplar_text || '';
+    editingAssignment.exemplar_text = currentExemplarText;
+    if (currentExemplarText) {
+      setStatus('exemplarUploadStatus', `✓ Uploaded (${currentExemplarText.length} characters).`, 'success');
+    } else {
+      // upload succeeded (200 OK) but the response body had no exemplar_text.
+      // that means the file, most likely the backend's AssignmentOut schema
+      // is missing the exemplar_text field, not that the file was empty.
+      setStatus('exemplarUploadStatus',
+        'Upload succeeded, but the server did not return the saved text. Check that AssignmentOut in schemas.py includes "exemplar_text".',
+        'error');
+    }
+    loadExemplarAnnotations();
+  } catch (err) {
+    setStatus('exemplarUploadStatus', `Upload failed: ${err.message}`, 'error');
+  }
+});
+
+// exemplar upload + drag-to-annotate
+
+async function loadExemplarAnnotations() {
+  if (!editingAssignment) return;
+  try {
+    const res = await fetch(`${API_BASE}/assignments/${editingAssignment.id}/exemplar-annotations`);
+    if (!res.ok) throw new Error(await res.text());
+    renderExemplarView(await res.json());
+  } catch (err) {
+    document.getElementById('exemplarAnnotationsList').innerHTML =
+      `<p class="text-sm italic" style="color: var(--ink-muted)">Could not load annotations: ${err.message}</p>`;
+  }
+}
+
+function renderExemplarView(annotationsData) {
+  const panel = document.getElementById('exemplarViewPanel');
+  const textEl = document.getElementById('exemplarTextContainer');
+
+  if (!currentExemplarText) {
+    panel.classList.add('hidden');
+    document.getElementById('exemplarAnnotationsList').innerHTML = '';
+    return;
+  }
+  panel.classList.remove('hidden');
+
+  const spans = [...annotationsData]
+    .filter(a => Number.isInteger(a.span_start) && Number.isInteger(a.span_end) && a.span_end > a.span_start)
+    .sort((a, b) => a.span_start - b.span_start);
+
+  let html = '';
+  let cursor = 0;
+  for (const a of spans) {
+    if (a.span_start < cursor) continue;
+    html += escapeHtml(currentExemplarText.slice(cursor, a.span_start));
+    html += `<mark class="essay-highlight ${escapeHtml(a.comment_type || '')}" data-annotation-id="${a.id}">${escapeHtml(currentExemplarText.slice(a.span_start, a.span_end))}</mark>`;
+    cursor = a.span_end;
+  }
+  html += escapeHtml(currentExemplarText.slice(cursor));
+  textEl.innerHTML = html;
+
+  const listEl = document.getElementById('exemplarAnnotationsList');
+  listEl.innerHTML = '';
+  if (spans.length === 0) {
+    listEl.innerHTML = `<p class="text-sm italic" style="color: var(--ink-muted)">No annotations yet. Drag to select a sentence above.</p>`;
+  } else {
+    for (const a of spans) listEl.appendChild(renderExemplarAnnotationCard(a));
+  }
+}
+
+function renderExemplarAnnotationCard(annotation) {
+  const card = document.createElement('div');
+  card.className = 'glass-card p-4 text-sm';
+  card.innerHTML = `
+    <blockquote class="serif italic border-l-2 pl-3 mb-2" style="border-color: var(--accent)">"${escapeHtml(annotation.quote)}"</blockquote>
+    <span class="inline-block text-xs uppercase tracking-wide mb-2" style="color: var(--ink-muted)">${escapeHtml(annotation.comment_type)}</span>
+    <p class="mb-2">${escapeHtml(annotation.comment)}</p>
+  `;
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.className = 'text-xs link-muted';
+  deleteBtn.addEventListener('click', () => deleteExemplarAnnotation(annotation.id));
+  card.appendChild(deleteBtn);
+  return card;
+}
+
+async function deleteExemplarAnnotation(id) {
+  try {
+    const res = await fetch(`${API_BASE}/exemplar-annotations/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(await res.text());
+    loadExemplarAnnotations();
+  } catch (err) {
+    alert(`Could not delete: ${err.message}`);
+  }
+}
+
+function getTextOffset(root, targetNode, targetOffset) {
+  let total = 0;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node === targetNode) return total + targetOffset;
+    total += node.textContent.length;
+  }
+  return total;
+}
+
+document.getElementById('exemplarTextContainer').addEventListener('mouseup', () => {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
+  const container = document.getElementById('exemplarTextContainer');
+  if (!container.contains(range.startContainer) || !container.contains(range.endContainer)) return;
+  const selectedText = selection.toString();
+  if (!selectedText.trim()) return;
+
+  const start = getTextOffset(container, range.startContainer, range.startOffset);
+  const end = getTextOffset(container, range.endContainer, range.endOffset);
+  pendingSelection = { span_start: start, span_end: end, quote: selectedText };
+  showExemplarPopup(range);
+});
+
+function showExemplarPopup(range) {
+  const popup = document.getElementById('exemplarCommentPopup');
+  const panel = document.getElementById('exemplarViewPanel');
+  const rect = range.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  popup.style.top = `${rect.bottom - panelRect.top + 8}px`;
+  popup.style.left = `${Math.max(0, rect.left - panelRect.left)}px`;
+  document.getElementById('exemplarSelectedQuote').textContent =
+    pendingSelection.quote.length > 80 ? pendingSelection.quote.slice(0, 80) + '...' : pendingSelection.quote;
+  document.getElementById('exemplarCommentText').value = '';
+  popup.classList.remove('hidden');
+}
+
+function hideExemplarPopup() {
+  document.getElementById('exemplarCommentPopup').classList.add('hidden');
+  pendingSelection = null;
+}
+
+document.getElementById('cancelExemplarAnnotation').addEventListener('click', hideExemplarPopup);
+
+document.getElementById('saveExemplarAnnotation').addEventListener('click', async () => {
+  if (!pendingSelection || !editingAssignment) return;
+  const comment_type = document.getElementById('exemplarCommentType').value;
+  const comment = document.getElementById('exemplarCommentText').value.trim();
+  if (!comment) return;
+  try {
+    const res = await fetch(`${API_BASE}/assignments/${editingAssignment.id}/exemplar-annotations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...pendingSelection, comment_type, comment }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    hideExemplarPopup();
+    window.getSelection().removeAllRanges();
+    loadExemplarAnnotations();
+  } catch (err) {
+    alert(`Could not save annotation: ${err.message}`);
+  }
+});
+
+// starting a session
+
+function renderPrewritingAssignmentSelect() {
+  const options = assignments.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  document.getElementById('prewritingAssignmentSelect').innerHTML = options;
+  document.getElementById('reflectionAssignmentSelect').innerHTML = options;
+}
+
+async function createSession(assignmentId, studentName, statusElId) {
+  if (!assignmentId) { setStatus(statusElId, 'Create an assignment on the Instructor tab first.', 'error'); return; }
+  const assignment = assignments.find(a => a.id === assignmentId);
+  try {
+    const res = await fetch(`${API_BASE}/session/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_name: studentName || 'Student', essay_prompt: assignment.prompt || '', assignment_id: assignmentId }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const session = await res.json();
+    setSessionIdInUrl(session.id);
+    enterSession(session.id);
+  } catch (err) {
+    setStatus(statusElId, `Could not start session: ${err.message}`, 'error');
+  }
+}
+
+document.getElementById('startSession').addEventListener('click', () => {
+  createSession(
+    document.getElementById('prewritingAssignmentSelect').value,
+    document.getElementById('studentName').value.trim(),
+    'sessionStatus'
+  );
+});
+
+document.getElementById('reflectionStartSession').addEventListener('click', () => {
+  createSession(
+    document.getElementById('reflectionAssignmentSelect').value,
+    document.getElementById('reflectionStudentName').value.trim(),
+    'reflectionSessionStatus'
+  );
+});
+
+document.getElementById('newSessionBtn').addEventListener('click', () => {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('session');
+  window.history.replaceState({}, '', url);
+  currentSessionId = null;
+  document.getElementById('prewritingThread').innerHTML = '';
+  document.getElementById('annotationsList').innerHTML = '';
+  document.getElementById('activeSessionBar').classList.add('hidden');
+  document.getElementById('prewritingActive').classList.add('hidden');
+  document.getElementById('prewritingStartForm').classList.remove('hidden');
+  document.getElementById('reflectionActive').classList.add('hidden');
+  document.getElementById('reflectionNoSession').classList.remove('hidden');
+});
+
+function setSessionIdInUrl(id) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('session', id);
+  window.history.replaceState({}, '', url);
+}
+
+function enterSession(id) {
+  currentSessionId = id;
+  document.getElementById('prewritingStartForm').classList.add('hidden');
+  document.getElementById('prewritingActive').classList.remove('hidden');
+  document.getElementById('reflectionNoSession').classList.add('hidden');
+  document.getElementById('reflectionActive').classList.remove('hidden');
+  document.getElementById('activeSessionBar').classList.remove('hidden');
+  document.getElementById('activeSessionId').textContent = id;
+  switchMainTab('prewriting');
+  loadPrewritingThread();
+  checkEssayStatus();
+}
+
+const existingSessionId = new URLSearchParams(window.location.search).get('session');
+loadAssignments().then(() => {
+  if (existingSessionId) enterSession(existingSessionId);
+});
+
+// chat thread
+
+async function loadPrewritingThread() {
+  if (!currentSessionId) return;
+  try {
+    const res = await fetch(`${API_BASE}/sessions/${currentSessionId}/prewriting/messages`);
+    if (!res.ok) throw new Error(await res.text());
+    const messages = await res.json();
+    renderPrewritingThread(messages);
+    if (messages.length > 0) setPhase(messages[messages.length - 1].phase);
+  } catch (err) {
+    console.error('Could not load prewriting thread', err);
+  }
+}
+
+function renderPrewritingThread(messages) {
+  const el = document.getElementById('prewritingThread');
+  el.innerHTML = '';
+  if (messages.length === 0) {
+    el.innerHTML = `<p class="text-sm italic" style="color: var(--ink-muted)">No messages yet. Start by sharing what you're thinking about writing.</p>`;
+    return;
+  }
+  for (const m of messages) el.appendChild(renderBubble(m.role, m.content));
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderBubble(role, content) {
+  const div = document.createElement('div');
+  const isAi = role === 'ai';
+  div.className = `rounded-lg px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${isAi ? 'msg-ai' : 'msg-student'}`;
+  const label = document.createElement('div');
+  label.className = 'text-xs font-medium mb-1';
+  label.style.color = isAi ? 'var(--accent)' : 'var(--ink-muted)';
+  label.textContent = isAi ? 'Coach' : 'You';
+  div.appendChild(label);
+  const body = document.createElement('div');
+  body.textContent = content;
+  div.appendChild(body);
+  return div;
+}
+
+function setPhase(phase) {
+  document.querySelectorAll('#phaseTracker span').forEach(el => {
+    const active = el.dataset.phase === phase;
+    el.classList.toggle('active', active);
+    el.classList.toggle('inactive', !active);
+  });
+}
+
+document.getElementById('sendPrewriting').addEventListener('click', sendPrewritingMessage);
+document.getElementById('prewritingInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrewritingMessage(); }
+});
+
+async function sendPrewritingMessage() {
+  const input = document.getElementById('prewritingInput');
+  const content = input.value.trim();
+  if (!content || !currentSessionId) return;
+  const el = document.getElementById('prewritingThread');
+  el.appendChild(renderBubble('student', content));
+  el.scrollTop = el.scrollHeight;
+  input.value = '';
+  const thinking = renderBubble('ai', 'Thinking...');
+  thinking.classList.add('opacity-60');
+  el.appendChild(thinking);
+  el.scrollTop = el.scrollHeight;
+  try {
+    const res = await fetch(`${API_BASE}/sessions/${currentSessionId}/prewriting/messages`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const reply = await res.json();
+    thinking.remove();
+    el.appendChild(renderBubble('ai', reply.reply));
+    setPhase(reply.phase);
+    el.scrollTop = el.scrollHeight;
+  } catch (err) {
+    thinking.remove();
+    const errBubble = renderBubble('ai', `Something went wrong: ${err.message}`);
+    errBubble.classList.add('bg-red-900/30');
+    el.appendChild(errBubble);
+  }
+}
+
+// essay upload + feedback
+
+async function checkEssayStatus() {
+  if (!currentSessionId) return;
+  try {
+    const res = await fetch(`${API_BASE}/session/${currentSessionId}`);
+    if (!res.ok) throw new Error(await res.text());
+    const session = await res.json();
+    currentEssayText = session.student_essay || '';
+    const feedbackBtn = document.getElementById('generateFeedbackBtn');
+    if (currentEssayText.trim().length > 0) {
+      setStatus('essayStatus', `✓ Essay uploaded (${currentEssayText.length} characters).`, 'success');
+      feedbackBtn.classList.remove('hidden');
+    } else {
+      setStatus('essayStatus', 'No essay uploaded yet.', 'muted');
+      feedbackBtn.classList.add('hidden');
+    }
+  } catch (err) {
+    setStatus('essayStatus', `Could not check essay status: ${err.message}`, 'error');
+  }
+}
+
+document.getElementById('uploadEssayBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('essayFileInput');
+  if (!currentSessionId) { setStatus('essayStatus', 'No active session, start one first.', 'error'); return; }
+  if (!fileInput.files.length) { setStatus('essayStatus', 'Choose a file first.', 'error'); return; }
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  setStatus('essayStatus', 'Uploading...', 'muted');
+  try {
+    const res = await fetch(`${API_BASE}/session/${currentSessionId}/essay`, { method: 'PUT', body: formData });
+    if (!res.ok) throw new Error(await res.text());
+    await checkEssayStatus();
+  } catch (err) {
+    setStatus('essayStatus', `Upload failed: ${err.message}`, 'error');
+  }
+});
+
+document.getElementById('generateFeedbackBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('feedbackStatus');
+  const btn = document.getElementById('generateFeedbackBtn');
+  btn.disabled = true;
+  statusEl.textContent = 'Reading your essay and generating feedback, this can take a moment...';
+  try {
+    const res = await fetch(`${API_BASE}/sessions/${currentSessionId}/feedback/generate`, { method: 'POST' });
+    if (!res.ok) throw new Error(await res.text());
+    statusEl.textContent = '';
+    await loadAnnotations();
+  } catch (err) {
+    statusEl.textContent = `Could not generate feedback: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// annotation threads
+
+async function loadAnnotations() {
+  if (!currentSessionId) return;
+  const container = document.getElementById('annotationsList');
+  container.innerHTML = `<p class="text-sm italic" style="color: var(--ink-muted)">Loading feedback...</p>`;
+  try {
+    const res = await fetch(`${API_BASE}/session/sessions/${currentSessionId}/annotations`);
+    if (!res.ok) throw new Error(await res.text());
+    renderAnnotations(await res.json());
+  } catch (err) {
+    container.innerHTML = `<p class="text-sm italic" style="color: var(--ink-muted)">No feedback yet.</p>`;
+  }
+}
+
+function renderAnnotations(annotationsData) {
+  const container = document.getElementById('annotationsList');
+  container.innerHTML = '';
+  if (annotationsData.length === 0) {
+    container.innerHTML = `<p class="text-sm italic" style="color: var(--ink-muted)">No feedback yet. Upload an essay and click "Get feedback" above.</p>`;
+    document.getElementById('essayViewPanel').classList.add('hidden');
+    return;
+  }
+  for (const a of annotationsData) {
+    a.messages = a.messages || [];
+    container.appendChild(renderAnnotationCard(a));
+  }
+  renderHighlightedEssay(annotationsData);
+}
+
+function renderHighlightedEssay(annotationsData) {
+  const panel = document.getElementById('essayViewPanel');
+  const el = document.getElementById('essayHighlighted');
+  if (!currentEssayText) { panel.classList.add('hidden'); return; }
+  panel.classList.remove('hidden');
+
+  const spans = [...annotationsData]
+    .filter(a => Number.isInteger(a.span_start) && Number.isInteger(a.span_end) && a.span_end > a.span_start)
+    .sort((a, b) => a.span_start - b.span_start);
+
+  let html = '';
+  let cursor = 0;
+  for (const a of spans) {
+    if (a.span_start < cursor) continue;
+    html += escapeHtml(currentEssayText.slice(cursor, a.span_start));
+    html += `<mark class="essay-highlight ${escapeHtml(a.comment_type || '')}" data-annotation-id="${a.id}">${escapeHtml(currentEssayText.slice(a.span_start, a.span_end))}</mark>`;
+    cursor = a.span_end;
+  }
+  html += escapeHtml(currentEssayText.slice(cursor));
+  el.innerHTML = html;
+
+  el.querySelectorAll('.essay-highlight').forEach(mark => {
+    mark.addEventListener('click', () => {
+      const card = document.getElementById(`annotation-${mark.dataset.annotationId}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.boxShadow = '0 0 0 2px var(--accent)';
+        setTimeout(() => { card.style.boxShadow = ''; }, 1200);
+      }
+    });
+  });
+}
+
+function renderAnnotationCard(annotation) {
+  const card = document.createElement('div');
+  card.id = `annotation-${annotation.id}`;
+  card.className = 'glass-card p-4 scroll-mt-4';
+  const quote = document.createElement('blockquote');
+  quote.className = 'serif italic border-l-2 pl-3 mb-3 text-sm';
+  quote.style.borderColor = 'var(--accent)';
+  quote.textContent = `"${annotation.quote}"`;
+  card.appendChild(quote);
+  const tag = document.createElement('span');
+  tag.className = 'inline-block text-xs uppercase tracking-wide mb-3';
+  tag.style.color = 'var(--ink-muted)';
+  tag.textContent = annotation.comment_type;
+  card.appendChild(tag);
+  const thread = document.createElement('div');
+  thread.className = 'space-y-2 mb-3';
+  for (const m of annotation.messages) thread.appendChild(renderBubble(m.role, m.content));
+  card.appendChild(thread);
+  const row = document.createElement('div');
+  row.className = 'flex gap-2';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Reply to this comment...';
+  input.className = 'flex-1 glass-input px-3 py-2 text-sm';
+  const btn = document.createElement('button');
+  btn.textContent = 'Reply';
+  btn.className = 'btn-glass px-3 py-2 text-sm';
+  btn.addEventListener('click', () => sendAnnotationReply(annotation.id, input, thread, btn));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAnnotationReply(annotation.id, input, thread, btn); });
+  row.appendChild(input);
+  row.appendChild(btn);
+  card.appendChild(row);
+  return card;
+}
+
+async function sendAnnotationReply(annotationId, input, thread, btn) {
+  const content = input.value.trim();
+  if (!content || !currentSessionId) return;
+  input.value = '';
+  btn.disabled = true;
+  thread.appendChild(renderBubble('student', content));
+  try {
+    const res = await fetch(`${API_BASE}/session/sessions/${currentSessionId}/annotations/${annotationId}/messages`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const reply = await res.json();
+    thread.appendChild(renderBubble('ai', reply.content));
+  } catch (err) {
+    const errBubble = renderBubble('ai', `Something went wrong: ${err.message}`);
+    errBubble.classList.add('bg-red-900/30');
+    thread.appendChild(errBubble);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

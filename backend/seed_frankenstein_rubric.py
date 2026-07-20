@@ -1,4 +1,3 @@
-# seed_frankenstein_rubric.py
 from database import SessionLocal
 from models import RubricCriterion, Assignment
 import uuid

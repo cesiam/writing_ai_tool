@@ -30,7 +30,7 @@ def create_session(data: SessionCreate, db: DBSession = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=SessionOut)
-def get_session(id: str, db: DBSession = Depends(get_db)):
+def get_session(id: uuid.UUID, db: DBSession = Depends(get_db)):
     session = db.query(SessionModel).filter(SessionModel.id == id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
