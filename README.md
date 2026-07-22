@@ -109,5 +109,5 @@ pytest
 ## Version History
 
 * Prototype 0.1
-    * See [commit change]()
+    * See [View commit history](https://github.com/username/repo/commits/main)
 
