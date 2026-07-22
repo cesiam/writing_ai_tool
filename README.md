@@ -4,13 +4,13 @@ Helps students through the writing process. Helps them in the outlining/brainsto
 
 ## Description
 
-Front-end:
+**Front-end:**
 Uses Tailwind CSS and JavaScript to render a basic user interface. Background and accent colors were chosen randomly, though for further development, the colors could be chosen to promote accessibility.
 
-Back-end:
+**Back-end:**
 Uses FastAPI to build a simple internal API. Calls the Parley API for LLM models (GPT-5.4-mini). Uses MDConverter to convert documents into Markdown files for better AI results. Enforces structured outputs on all API calls through Pydantic. Uses SQLite as a database, which lives locally. Uses the SQLAlchemy library as the Python interface to the SQL database.
 
-Overall process:
+**Overall process:**
 The front-end sends requests to the FastAPI back-end, which validates and structures data using Pydantic, calls the Parley API to generate LLM responses, and persists results to the local SQLite database through SQLAlchemy.
 
 The instructor provides annotations on an exemplar essay along with a simple rubric to give a clearer sense of what is expected of the student. The system uses this information to gauge how well the student is meeting requirements during the pre-writing session, and uses the insights from the exemplar annotations to learn what should be annotated in the student's work.
