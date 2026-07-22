@@ -18,7 +18,6 @@ The instructor provides annotations on an exemplar essay along with a simple rub
 
 ## Getting Started
 
-# Running the Project Locally
 
 ## 1. Create and activate a virtual environment
 
@@ -56,17 +55,33 @@ PARLEY_API_KEY=your_key_here
 
 ## 4. Start the back-end server
 
-From the project root, run the FastAPI app with Uvicorn:
+From the project root run these commands on the terminal
 
 ```bash
-uvicorn main:app --reload
+cd backend
+fastapi dev main.py
 ```
 
 Replace `main:app` with the correct module and app object name if your entry point is named differently (e.g. `app.main:app`).
 
 By default this serves the API at `http://127.0.0.1:8000`. You can view the interactive API docs at `http://127.0.0.1:8000/docs`.
 
-## 5. Start the front-end server
+## 5. Using the /docs interface
+
+FastAPI automatically generates interactive API documentation at `http://127.0.0.1:8000/docs` (Swagger UI) while the back-end server is running. This is useful for testing endpoints without needing the front-end.
+
+To try an endpoint:
+
+1. Open `http://127.0.0.1:8000/docs` in your browser.
+2. Click on the endpoint you want to test to expand it.
+3. Click the "Try it out" button.
+4. Fill in any required parameters or request body fields.
+5. Click "Execute" to send the request.
+6. Scroll down to see the response, including the status code, response body, and headers.
+
+This is a quick way to confirm the back-end is working correctly and to inspect the structure of requests and responses, since Pydantic models define the expected schemas shown here.
+
+## 6. Start the front-end server
 
 Since the front-end is vanilla HTML/JS/Tailwind, you can serve it with Python's built-in server. From the front-end directory:
 
@@ -76,7 +91,7 @@ python3 -m http.server 5500
 
 Then open `http://127.0.0.1:5500` in your browser.
 
-## 6. Running tests
+## 7. Running tests
 
 With the virtual environment active:
 
@@ -86,7 +101,7 @@ pytest
 
 ## Notes
 
-- Keep the back-end (`uvicorn`) and front-end (`http.server`) running in two separate terminal windows/tabs.
+- Keep the back-end (`fastapi dev`) and front-end (`http.server`) running in two separate terminal windows/tabs.
 - Make sure your front-end's API calls point to the correct back-end URL (e.g. `http://127.0.0.1:8000`).
 - Deactivate the virtual environment when done with `deactivate`.
 
