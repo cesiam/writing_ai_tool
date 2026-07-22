@@ -1,6 +1,6 @@
 # Writing Coach
 
-Helps students through the writing process. Helps them in the outlining/brainstorming stage and after the initial first draft. It is meant to encourage an iterative approach to writing, where the student responds to specific feedback given by OpenAI's GPT 5.4-mini to then improve their writing.
+This is an AI tool that is meant to help students through the writing process. Helps them in the outlining/brainstorming stage and after the initial first draft. It is meant to encourage an iterative approach to writing, where the student responds to specific feedback given by OpenAI's GPT 5.4-mini to then improve their writing.
 
 ## Description
 
