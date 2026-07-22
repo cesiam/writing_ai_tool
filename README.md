@@ -109,5 +109,5 @@ pytest
 ## Version History
 
 * Prototype 0.1
-    * See [View commit history](https://github.com/username/repo/commits/main)
+    * See [View commit history](https://github.com/cesiam/writing_ai_tool/commits/main)
 
